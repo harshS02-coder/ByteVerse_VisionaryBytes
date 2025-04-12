@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Time Capsule</title>
+  <style>
+    /* General Styling */
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #f0f4f8;
+      margin-top: 430px;
+      margin-bottom: 10px;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3rem;
+      color: #FF5E5B;
+      margin-bottom: 2rem;
+      animation: bounce 1s infinite alternate;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      color: #4CAF50;
+      margin-bottom: 1rem;
+    }
+
+    /* Section Styling */
+    section {
+      background: #ffffff;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      padding: 2rem;
+      margin: 1.5rem 0;
+      width: 80%;
+      max-width: 500px;
+      transition: all 0.3s ease;
+    }
+
+    section:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    input, button {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 1rem 0;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    input:focus, button:focus {
+      outline: none;
+      border-color: #FF5E5B;
+      animation: focusEffect 0.5s ease-in-out;
+    }
+
+    button {
+      background-color: #FF5E5B;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #e54847;
+    }
+
+    .result {
+      margin-top: 1rem;
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: #4CAF50;
+      opacity: 0;
+      animation: fadeIn 1s forwards;
+    }
+
+    .result.error {
+      color: #FF5E5B;
+    }
+
+    /* Animations */
+    @keyframes bounce {
+      0% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+      100% {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes focusEffect {
+      0% {
+        border-color: #ddd;
+      }
+      100% {
+        border-color: #FF5E5B;
+      }
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🕰️ Time Capsule</h1>
+
+  <section>
+    <h2>Create Capsule</h2>
+    <input type="text" id="create-message" placeholder="Message"/>
+    <input type="date" id="create-date"/>
+    <input type="password" id="create-password" placeholder="Password"/>
+    <button onclick="createCapsule()">Create Capsule</button>
+    <div class="result" id="create-result"></div>
+  </section>
+
+  <hr/>
+
+  <section>
+    <h2>View Capsule</h2>
+    <input type="text" id="view-id" placeholder="Capsule ID"/>
+    <button onclick="viewCapsule()">Check Status</button>
+    <div class="result" id="view-result"></div>
+  </section>
+
+  <hr/>
+
+  <section>
+    <h2>Unlock Capsule</h2>
+    <input type="text" id="unlock-id" placeholder="Capsule ID"/>
+    <input type="password" id="unlock-password" placeholder="Password"/>
+    <button onclick="unlockCapsule()">Unlock</button>
+    <div class="result" id="unlock-result"></div>
+  </section>
+
+  <script>
+    const API = "http://localhost:3000";
+
+    async function createCapsule() {
+      const message = document.getElementById("create-message").value;
+      const unlockDate = document.getElementById("create-date").value;
+      const password = document.getElementById("create-password").value;
+
+      const res = await fetch(`${API}/capsules`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, unlockDate, password })
+      });
+      const data = await res.json();
+      const resultElement = document.getElementById("create-result");
+      resultElement.classList.remove("error");
+      resultElement.classList.add(data.capsuleId ? "" : "error");
+      resultElement.textContent = data.capsuleId
+        ? `Capsule Created! ID: ${data.capsuleId}`
+        : `Error: ${data.error}`;
+    }
+
+    async function viewCapsule() {
+      const id = document.getElementById("view-id").value;
+      const res = await fetch(`${API}/capsules/${id}`);
+      const data = await res.json();
+      const resultElement = document.getElementById("view-result");
+      resultElement.classList.remove("error");
+      resultElement.classList.add(data.status ? "" : "error");
+      resultElement.textContent = data.status
+        ? `Status: ${data.status} | Unlock Date: ${data.unlockDate}`
+        : `Error: ${data.error}`;
+    }
+
+    async function unlockCapsule() {
+      const id = document.getElementById("unlock-id").value;
+      const password = document.getElementById("unlock-password").value;
+
+      const res = await fetch(`${API}/capsules/${id}/unlock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      const resultElement = document.getElementById("unlock-result");
+      resultElement.classList.remove("error");
+      resultElement.classList.add(data.message ? "" : "error");
+      resultElement.textContent = data.message
+        ? `🎉 Message: ${data.message}`
+        : `Error: ${data.error}`;
+    }
+  </script>
+</body>
+</html>
